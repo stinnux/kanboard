@@ -6,7 +6,13 @@ use Kanboard\Core\Security\Token;
 use Kanboard\Core\Security\Role;
 use PDO;
 
-const VERSION = 103;
+const VERSION = 104;
+
+function version_104(PDO $pdo)
+{
+  $pdo->exec("ALTER TABLE subtask_time_tracking ADD COLUMN comment TEXT");
+  $pdo->exec("ALTER TABLE subtask_time_tracking ADD COLUMN is_billable INTEGER default '0'");
+}
 
 function version_103(PDO $pdo)
 {
