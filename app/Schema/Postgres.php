@@ -6,7 +6,16 @@ use PDO;
 use Kanboard\Core\Security\Token;
 use Kanboard\Core\Security\Role;
 
-const VERSION = 91;
+const VERSION = 92;
+
+function version_92(PDO $pdo)
+{
+  $pdo->exec("
+    ALTER TABLE subtask_time_tracking
+      ADD COLUMN comment TEXT,
+      ADD COLUMN is_billable BOOLEAN default '0'
+  ");
+}
 
 function version_91(PDO $pdo)
 {
