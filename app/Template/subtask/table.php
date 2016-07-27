@@ -10,6 +10,7 @@
             <th><?= t('Time tracking') ?></th>
             <?php if ($editable): ?>
                 <th class="column-5"></th>
+                <th class="column-5"></th>
             <?php endif ?>
         </tr>
     </thead>
@@ -39,6 +40,10 @@
                         <?php if (! empty($subtask['time_estimated'])): ?>
                             <strong><?= $this->text->e($subtask['time_estimated']).'h' ?></strong> <?= t('estimated') ?>
                         <?php endif ?>
+                        <?php if (! empty($subtask['time_billable'])): ?>
+                            <strong><?= $this->text->e($subtask['time_billable']).'h' ?></strong> <?= t('estimated') ?>
+                        <?php endif ?>
+
                     </li>
                     <?php if ($editable && $subtask['user_id'] == $this->user->getId()): ?>
                     <li>
@@ -61,6 +66,11 @@
                         'subtask' => $subtask,
                     )) ?>
                 </td>
+                <td>
+                    <i class="fa fa-clock-o" aria-hidden="true"></i>
+                    <?= $this->url->link(t('New'), 'TimetrackingeditorController', 'create', array('plugin' => 'TimetrackingEditor', 'task_id' => $task['id'], 'project_id' => $task['project_id'], 'subtask_id' => $subtask['id']), false, 'popover') ?>
+                </td>
+
             <?php endif ?>
         </tr>
         <?php endforeach ?>

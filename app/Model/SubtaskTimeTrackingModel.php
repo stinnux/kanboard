@@ -266,6 +266,28 @@ class SubtaskTimeTrackingModel extends Base
         ), false);
     }
 
+
+    /**
+     * Update subtask time billable
+     *
+     * @access public
+     * @param  integer   $subtask_id
+     * @param  float     $time_billable
+     * @return bool
+     */
+    public function updateSubtaskTimeBillable($subtask_id, $time_billable)
+    {
+        $subtask = $this->subtaskModel->getById($subtask_id);
+
+        // Fire the event subtask.update
+        return $this->subtaskModel->update(array(
+            'id' => $subtask['id'],
+            'time_billable' => $subtask['time_billable'] + $time_billable,
+            'task_id' => $subtask['task_id'],
+        ), false);
+    }
+
+
     /**
      * Update task time tracking based on subtasks time tracking
      *
@@ -297,6 +319,7 @@ class SubtaskTimeTrackingModel extends Base
                     ->eq('task_id', $task_id)
                     ->columns(
                         'SUM(time_spent) AS time_spent',
+                        'SUM(time_billable) AS time_billable',
                         'SUM(time_estimated) AS time_estimated'
                     )
                     ->findOne();

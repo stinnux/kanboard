@@ -15,6 +15,10 @@
     margin-bottom: 3px;
 }
 
+.listing li warning {
+    background-color: yellow;
+}
+
 .listing ul {
     margin-top: 15px;
     margin-bottom: 15px;

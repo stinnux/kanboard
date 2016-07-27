@@ -6,7 +6,17 @@ use PDO;
 use Kanboard\Core\Security\Token;
 use Kanboard\Core\Security\Role;
 
-const VERSION = 92;
+const VERSION = 94;
+
+function version_94(PDO $pdo)
+{
+    $pdo->exec("ALTER TABLE subtasks ADD COLUMN time_billable REAL DEFAULT 0");
+}
+
+function version_93(PDO $pdo)
+{
+    $pdo->exec("ALTER TABLE tasks ADD COLUMN time_billable REAL DEFAULT 0");
+}
 
 function version_92(PDO $pdo)
 {
