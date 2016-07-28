@@ -38,6 +38,16 @@
                 <?php if (! empty($task['time_estimated'])): ?>
                     <strong><?= $this->text->e($task['time_estimated']).'h' ?></strong> <?= t('estimated') ?>
                 <?php endif ?>
+
+                <?php if (! empty($task['time_billable'])): ?>
+                    <strong><?= $this->text->e($task['time_billable']).'h' ?></strong> <?= t('billable') ?>
+                <?php endif ?>
+
+                <?php if (! empty($task['time_spent'] || ! empty($task['time_estimated']))): ?>
+                    <strong><?= $this->text->e($task['time_estimated'] - $task['time_spent']).'h' ?></strong> <?= t('remaining') ?>
+                <?php endif ?>
+
+
             </td>
             <td>
                 <?= $this->dt->date($task['date_due']) ?>

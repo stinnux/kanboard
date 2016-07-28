@@ -109,7 +109,18 @@
                         <span><?= t('%s hours', $task['time_spent']) ?></span>
                     </li>
                     <?php endif ?>
-
+                    <?php if ($task['time_billable']): ?>
+                      <li>
+                        <strong><?= t('Time billable:') ?></strong>
+                        <span><?= t('%s hours', $task['time_billable']) ?></span>
+                      </li>
+                    <?php endif ?>
+                    <?php if ($task['time_estimated'] || $task['time_spent']): ?>
+                      <li>
+                        <strong><?= t('Time remaining:') ?></strong>
+                        <span><?= t('%s hours', $task['time_estimated'] - $task['time_spent']) ?></span>
+                      </li>
+                    <?php endif ?>
                     <?= $this->hook->render('template:task:details:third-column', array('task' => $task)) ?>
                 </ul>
             </div>

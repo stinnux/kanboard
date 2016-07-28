@@ -99,6 +99,11 @@ class LayoutHelper extends Base
         return $this->subLayout('project_user_overview/layout', 'project_user_overview/sidebar', $template, $params);
     }
 
+    public function projectAnalytics($template, array $params)
+    {
+      return $this->subLayout('project_analytics/layout', 'project_analytics/sidebar', $template, $params);
+    }
+
     /**
      * Common layout for config views
      *

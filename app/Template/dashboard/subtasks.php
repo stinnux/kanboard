@@ -34,6 +34,16 @@
                 <?php if (! empty($subtask['time_estimated'])): ?>
                     <strong><?= $this->text->e($subtask['time_estimated']).'h' ?></strong> <?= t('estimated') ?>
                 <?php endif ?>
+
+                <?php if (! empty($subtask['time_billable'])): ?>
+                    <strong><?= $this->text->e($subtask['time_billable']).'h' ?></strong> <?= t('billable') ?>
+                <?php endif ?>
+
+                <?php if (! empty($subtask['time_spent']) || ! empty($subtask['time_estimated'])): ?>
+                    <strong><?= $this->text->e($subtask['time_estimated'] - $subtask['time_spent']).'h' ?></strong> <?= t('remaining') ?>
+                <?php endif ?>
+
+
             </td>
         </tr>
         <?php endforeach ?>
