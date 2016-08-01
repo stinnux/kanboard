@@ -130,6 +130,10 @@ th a:hover {
     width: 70%;
 }
 
+.right {
+    text-align: right;
+}
+
 .draggable-row-handle {
     cursor: move;
     color: #dedede;
@@ -162,4 +166,3 @@ tr.draggable-item-selected td:last-child {
 tr.draggable-item-hover {
     background: #FEFFF2;
 }
-

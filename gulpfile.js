@@ -37,7 +37,8 @@ var src = {
         'assets/css/src/files.css',
         'assets/css/src/views.css',
         'assets/css/src/accordion.css',
-        'assets/css/src/avatar.css'
+        'assets/css/src/avatar.css',
+        'assets/css/src/analytics.css'
     ],
     print: [
         'assets/css/src/print.css',

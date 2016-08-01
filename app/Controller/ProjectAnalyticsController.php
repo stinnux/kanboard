@@ -21,17 +21,12 @@ class ProjectAnalyticsController extends BaseController
   {
     $values = $this->request->getValues();
 
-    var_dump($values);
-
-    if (defined($values['from']) && defined($value['to'])) {
-        print "From: " . $values['from'];
-        print "To: " . $values['to'];
-
+    if (!empty($values)) {
         $paginator = $this->paginator
             ->setUrl('ProjectAnalyticController', 'billable', array())
             ->setMax(30)
             ->setOrder(SubtaskTimeTrackingModel::TABLE.'.start')
-            ->setQuery($this->subtaskTimeTrackingModel->getBillableHoursQuery()->getQuery())
+            ->setQuery($this->subtaskTimeTrackingModel->getBillableHoursQuery())
             ->calculate();
     } else {
         $paginator = $this->paginator;

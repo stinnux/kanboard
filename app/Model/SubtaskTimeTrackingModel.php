@@ -162,13 +162,16 @@ class SubtaskTimeTrackingModel extends Base
                 SubtaskModel::TABLE.'.title AS subtask_title',
                 TaskModel::TABLE.'.project_id',
                 TaskModel::TABLE.'.color_id',
+                TaskModel::TABLE.'.title as task_title',
                 UserModel::TABLE.'.username',
-                UserModel::TABLE.'.name AS user_fullname'
+                UserModel::TABLE.'.name AS user_fullname',
+                ProjectModel::TABLE.'.name as project_name'
                 )
                 ->join(SubtaskModel::TABLE, 'id', 'subtask_id')
                 ->join(TaskModel::TABLE, 'id', 'task_id', SubtaskModel::TABLE)
                 ->join(UserModel::TABLE, 'id', 'user_id', self::TABLE)
-                ->eq(TaskModel::TABLE.'.project_id', $project_id)
+                ->join(ProjectModel::TABLE,'id', 'project_id', TaskModel::TABLE)
+                ->eq(self::TABLE.'.is_billable', '1')
                 ->asc(TaskModel::TABLE.'.project_id')
                 ->asc(SubtaskModel::TABLE.'.task_id')
                 ->asc(self::TABLE.'.start');
