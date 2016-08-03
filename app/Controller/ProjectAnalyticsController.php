@@ -2,7 +2,6 @@
 
 namespace Kanboard\Controller;
 use Kanboard\Controller\BaseController;
-use Kanboard\Model\SubtaskTimeTrackingModel;
 
 /**
 * Project Analytics Controller
@@ -25,8 +24,9 @@ class ProjectAnalyticsController extends BaseController
         $paginator = $this->paginator
             ->setUrl('ProjectAnalyticController', 'billable', array())
             ->setMax(30)
-            ->setOrder(SubtaskTimeTrackingModel::TABLE.'.start')
-            ->setQuery($this->subtaskTimeTrackingModel->getBillableHoursQuery())
+            ->setQuery($this->subtaskTimeTrackingModel->getBillableHoursQuery(
+              $this->dateParser->removeTimeFromTimestamp($this->dateParser->getTimestamp($values['from'])),
+              $this->dateParser->removeTimeFromTimestamp($this->dateParser->getTimestamp($values['to']))))
             ->calculate();
     } else {
         $paginator = $this->paginator;

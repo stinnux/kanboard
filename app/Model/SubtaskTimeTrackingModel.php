@@ -145,7 +145,7 @@ class SubtaskTimeTrackingModel extends Base
      * @return \PicoDb\Table
      */
 
-     public function getBillableHoursQuery()
+     public function getBillableHoursQuery($from, $to)
      {
          return $this->db
             ->table(self::TABLE)
@@ -172,8 +172,11 @@ class SubtaskTimeTrackingModel extends Base
                 ->join(UserModel::TABLE, 'id', 'user_id', self::TABLE)
                 ->join(ProjectModel::TABLE,'id', 'project_id', TaskModel::TABLE)
                 ->eq(self::TABLE.'.is_billable', '1')
+                ->gte(self::TABLE.'.start', $from)
+                ->lte(self::TABLE.'.start', $to)
                 ->asc(TaskModel::TABLE.'.project_id')
                 ->asc(SubtaskModel::TABLE.'.task_id')
+                ->asc(self::TABLE.'.subtask_id')
                 ->asc(self::TABLE.'.start');
      }
 
