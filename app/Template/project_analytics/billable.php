@@ -42,6 +42,12 @@
                   'groupValues' => $record['groupValues'])
                 ); ?>
             <?php endif ?>
+            <?php if ($record['groupName'] == 'Project'): ?>
+              <?= $this->render('project_analytics/project_footer', array(
+                  'values' => $record['values'],
+                  'groupValues' => $record['groupValues'])
+                ); ?>
+            <?php endif ?>
           <?php endif ?>
           <?php if ($record['groupType'] == 'details'): ?>
             <?php foreach ($record['values'] as $values): ?>
