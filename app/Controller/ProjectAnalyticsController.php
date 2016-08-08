@@ -28,20 +28,17 @@ class ProjectAnalyticsController extends BaseController
       $values['to'] = $this->request->getStringParam('to', date('Y-m-d'), strtotime('first day of this month'));
     }
 
+    print "From: " . $this->dateParser->removeTimeFromTimestamp($this->dateParser->getTimestamp($values['from']));
+    print "To: " .   $this->dateParser->removeTimeFromTimestamp($this->dateParser->getTimestamp($values['to']));
+
     $groupinator = $this->groupinator
         ->setQuery($this->subtaskTimeTrackingModel->getBillableHoursQuery(
           $this->dateParser->removeTimeFromTimestamp($this->dateParser->getTimestamp($values['from'])),
           $this->dateParser->removeTimeFromTimestamp($this->dateParser->getTimestamp($values['to']))))
         ->addAggregate(SubtaskTimeTrackingModel::TABLE.'.time_spent','sum')
-        ->addGroup(SubtaskTimeTrackingModel::TABLE.'.subtask_id', 'Subtask',
-          'project_analytics/subtask_header',
-          'project_analytics/subtask_footer')
-        ->addGroup(SubtaskModel::TABLE.'.task_id', 'Task',
-          'project_analytics/task_header',
-          'project_analytics/task_footer')
-        ->addGroup(TaskModel::TABLE.'.project_id', 'Project',
-          'project_analytics/project_header',
-          'project_analytics/project_footer')
+        ->addGroup(SubtaskTimeTrackingModel::TABLE.'.subtask_id', 'Subtask')
+        ->addGroup(SubtaskModel::TABLE.'.task_id', 'Task')
+        ->addGroup(TaskModel::TABLE.'.project_id', 'Project')
         ->setDetails("project_analytics/details")
         ->setMax(20)
         ->calculate();

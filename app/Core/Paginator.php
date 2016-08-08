@@ -2,6 +2,7 @@
 
 namespace Kanboard\Core;
 
+use PHP_Token_PROTECTED;
 use Pimple\Container;
 use PicoDb\Table;
 
@@ -27,7 +28,7 @@ class Paginator
      * @access private
      * @var integer
      */
-    private $total = 0;
+    protected $total = 0;
 
     /**
      * Page number
@@ -43,7 +44,7 @@ class Paginator
      * @access private
      * @var integer
      */
-    private $offset = 0;
+    protected $offset = 0;
 
     /**
      * Limit
@@ -51,7 +52,7 @@ class Paginator
      * @access private
      * @var integer
      */
-    private $limit = 0;
+    protected $limit = 0;
 
     /**
      * Sort by this column
