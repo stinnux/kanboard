@@ -32,13 +32,14 @@ class ProjectAnalyticsController extends BaseController
     print "To: " .   $this->dateParser->removeTimeFromTimestamp($this->dateParser->getTimestamp($values['to']));
 
     $groupinator = $this->groupinator
+        ->setUrl("ProjectAnalyticsController","billable")
         ->setQuery($this->subtaskTimeTrackingModel->getBillableHoursQuery(
           $this->dateParser->removeTimeFromTimestamp($this->dateParser->getTimestamp($values['from'])),
           $this->dateParser->removeTimeFromTimestamp($this->dateParser->getTimestamp($values['to']))))
         ->addAggregate(SubtaskTimeTrackingModel::TABLE.'.time_spent','sum')
-        ->addGroup(SubtaskTimeTrackingModel::TABLE.'.subtask_id', 'Subtask')
-        ->addGroup(SubtaskModel::TABLE.'.task_id', 'Task')
-        ->addGroup(TaskModel::TABLE.'.project_id', 'Project')
+        ->addGroup(SubtaskTimeTrackingModel::TABLE.'.subtask_id', 'Subtask', array('header' => 'none', 'footer' => 'allways'))
+        ->addGroup(SubtaskModel::TABLE.'.task_id', 'Task', array('header' => 'none', 'footer' => 'last'))
+        ->addGroup(TaskModel::TABLE.'.project_id', 'Project', array('header' => 'first', 'footer' => 'last'))
         ->setDetails("project_analytics/details")
         ->setMax(20)
         ->calculate();
