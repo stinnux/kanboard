@@ -15,6 +15,8 @@ if ($dbUrlParser->isEnvironmentVariableDefined()) {
     define('DB_NAME', $dbSettings['database']);
 }
 
+
+
 $config_file = implode(DIRECTORY_SEPARATOR, array(__DIR__, '..', 'config.php'));
 
 if (file_exists($config_file)) {

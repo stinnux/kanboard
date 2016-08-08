@@ -6,6 +6,7 @@ use Pimple\Container;
 use Pimple\ServiceProviderInterface;
 use Kanboard\Core\ObjectStorage\FileStorage;
 use Kanboard\Core\Paginator;
+use Kanboard\Core\Groupinator;
 use Kanboard\Core\Http\OAuth2;
 use Kanboard\Core\Tool;
 use Kanboard\Core\Http\Client as HttpClient;
@@ -164,6 +165,10 @@ class ClassProvider implements ServiceProviderInterface
 
         $container['paginator'] = $container->factory(function ($c) {
             return new Paginator($c);
+        });
+
+        $container['groupinator'] = $container->factory(function ($c) {
+          return new Groupinator($c);
         });
 
         $container['oauth'] = $container->factory(function ($c) {
