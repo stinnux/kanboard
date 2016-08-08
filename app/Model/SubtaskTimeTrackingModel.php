@@ -316,4 +316,48 @@ class SubtaskTimeTrackingModel extends Base
                     )
                     ->findOne();
     }
+
+    /**
+     * Get query for billable hours within an time frame (pagination)
+     *
+     * @author me@stinnux.de
+     * @access public
+     * @return \PicoDb\Table
+     */
+
+     public function getBillableHoursQuery($from, $to)
+     {
+         return $this->db
+            ->table(self::TABLE)
+            ->columns(
+                self::TABLE.'.id',
+                self::TABLE.'.subtask_id',
+                self::TABLE.'.end',
+                self::TABLE.'.start',
+                self::TABLE.'.time_spent',
+                self::TABLE.'.comment',
+                self::TABLE.'.is_billable',
+                self::TABLE.'.user_id',
+                SubtaskModel::TABLE.'.task_id',
+                SubtaskModel::TABLE.'.title AS subtask_title',
+                TaskModel::TABLE.'.project_id',
+                TaskModel::TABLE.'.color_id',
+                TaskModel::TABLE.'.title as task_title',
+                UserModel::TABLE.'.username',
+                UserModel::TABLE.'.name AS user_fullname',
+                ProjectModel::TABLE.'.name as project_name'
+                )
+                ->join(SubtaskModel::TABLE, 'id', 'subtask_id')
+                ->join(TaskModel::TABLE, 'id', 'task_id', SubtaskModel::TABLE)
+                ->join(UserModel::TABLE, 'id', 'user_id', self::TABLE)
+                ->join(ProjectModel::TABLE,'id', 'project_id', TaskModel::TABLE)
+                ->eq(self::TABLE.'.is_billable', '1')
+                ->gte(self::TABLE.'.start', $from)
+                ->lte(self::TABLE.'.start', $to)
+                ->asc(TaskModel::TABLE.'.project_id')
+                ->asc(SubtaskModel::TABLE.'.task_id')
+                ->asc(self::TABLE.'.subtask_id')
+                ->asc(self::TABLE.'.start');
+     }
+
 }

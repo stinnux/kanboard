@@ -1,6 +1,11 @@
 <section id="main">
     <div class="page-header">
         <ul>
+              <?= $this->hook->render('template:projectlist:menubefore', array()) ?>
+
+              <?php if ($this->user->hasAccess('ProjectAnalyticsController', 'show')): ?>
+                <li><i class="fa fa-line-chart fa-fw"></i><?= $this->url->link(t('Analytics'), 'ProjectAnalyticsController', 'billable') ?></li>
+              <?php endif ?>
             <?php if ($this->user->hasAccess('ProjectUserOverviewController', 'managers')): ?>
                 <li><i class="fa fa-user fa-fw"></i><?= $this->url->link(t('Users overview'), 'ProjectUserOverviewController', 'managers') ?></li>
             <?php endif ?>
@@ -47,7 +52,7 @@
                         <i class="fa fa-lock fa-fw" title="<?= t('Private project') ?>"></i>
                     <?php endif ?>
 
-                    <?php if (! empty($project['description'])): ?>
+                    <?php if (!empty($project['description'])): ?>
                         <span class="tooltip" title="<?= $this->text->markdownAttribute($project['description']) ?>">
                             <i class="fa fa-info-circle"></i>
                         </span>
