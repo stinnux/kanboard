@@ -153,23 +153,28 @@ class Groupinator extends Paginator
           $this->groupquery->groupBy($this->_groupby);
 
           $current_offset = 0;
-          $result = array();
+          $result = $this->groupquery->findAll();
 
-          $position = 'first';
-
-          foreach ($this->groupquery->findAll() as $groupvalue) {
+          for ($i=0; $i <= count($result); $i++) {
+            $groupvalue = $result[$i];
+            if (!empty($result[$i-1])) {
+              $prev_groupvalue = $result[$i-1];
+            } else {
+              $prev_groupvalue = null;
+            }
+            if (!empty($result[$i+1])) {
+              $next_groupvalue = $result[$i+1];
+            } else {
+              $next_groupvalue = null;
+            }
             $this->sumUpGroupValues($groupvalue);
+            $values = $this->getDetails($groupvalue);
             // Move through the groups until the offset is reached
             if ($current_offset + $groupvalue['_count'] >= $this->offset) {
-                // Read details first, so that they are available for the header
-                $values = $this->getDetails($groupvalue);
-                $this->addAllHeaders($result, $groupvalue, $values[0], $position);
-                $this->addDetails($result, $groupvalue, $values);
-                $this->addAllFooters($result, $groupvalue, $values[0], $position);
-                $oldgroupvalue = $groupvalue;
+                $this->addAllHeaders($result, $prev_groupvalue, $groupvalue, $next_groupvalue, $values[0]);
+                $this->addDetails($result, $prev_groupvalue, $groupvalue, $next_groupvalue, $values);
+                $this->addAllFooters($result, $prev_groupvalue, $groupvalue, $next_groupvalue, $values[0]);
                 $current_offset += $groupvalue['_count'];
-                $position = 'middle';
-                // TODO: Find out when position is 'last'
             } else {
                 $current_offset += $groupvalue['_count'];
             }
@@ -209,17 +214,43 @@ class Groupinator extends Paginator
  * var $position the position (first/last/middle) of the header
  */
 
-private function addAllHeaders(&$result, $groupvalue, $values, $position)
+private function addAllHeaders(&$result, $prev_groupvalue, $groupvalue, $next_groupvalue, $values)
 {
       foreach ($this->_grouping as $groupColumn => $groupDetails) {
+        $position = $this->getPosition($groupColumn, $prev_groupvalue, $groupvalue, $next_groupvalue);
         if ($groupDetails['repeat']['header'] == 'allways' ||
-            $groupDetails['repeat']['header'] == 'first' && $position == 'first' ||
-            $groupDetails['repeat']['header'] == 'last' && $position == 'last')
+            $groupDetails['repeat']['header'] == 'first'  && $position == 'first' ||
+            $groupDetails['repeat']['header'] == 'last'   && $position == 'last' ||
+            $groupDetails['repeat']['header'] == 'middle' && $position == 'middle')
             {
               $groupValues=$this->getGroupValues($groupColumn,$groupvalue);
               $this->addHeader($result, $groupColumn, $groupValues, $values);
             }
       }
+}
+
+private function getPosition($groupColumn, $prev_groupvalue, $groupvalue, $next_groupvalue)
+{
+    if ($prev_groupvalue == null) {
+      return "first";
+    }
+    if ($next_groupvalue == null) {
+      return "last";
+    }
+    $prev = $prev_groupvalue[$groupColumn];
+    $curr = $groupvalue[$groupColumn];
+    $next = $next_groupvalue[$groupColumn];
+
+    if ($prev == $curr && $curr==$next) {
+      return "middle";
+    }
+    if ($prev != $curr) {
+      return "first";
+    }
+    if ($curr != $next) {
+      return "last";
+    }
+
   }
 
   private function addHeader(&$result, $groupColumn, $groupvalue, $values)
@@ -231,12 +262,14 @@ private function addAllHeaders(&$result, $groupvalue, $values, $position)
       'values' => $values, ));
     }
 
-    private function addAllFooters(&$result, $groupvalue, $values, $position)
+    private function addAllFooters(&$result, $prev_groupvalue, $groupvalue, $next_groupvalue, $values)
     {
         foreach ($this->_grouping as $groupColumn => $groupDetails) {
+          $position = $this->getPosition($groupColumn, $prev_groupvalue, $groupvalue, $next_groupvalue);
             if ($groupDetails['repeat']['footer'] == 'allways' ||
-                $groupDetails['repeat']['footer'] == 'first' && $position == 'first' ||
-                $groupDetails['repeat']['footer'] == 'last' && $position == 'last')
+                $groupDetails['repeat']['footer'] == 'first'  && $position == 'first' ||
+                $groupDetails['repeat']['footer'] == 'last '  && $position == 'last'  ||
+                $groupDetails['repeat']['footer'] == 'middle' && $position == 'middle')
                 {
                 $groupValues=$this->getGroupValues($groupColumn,$groupvalue);
                 $this->addFooter($result, $groupColumn, $groupValues, $values);

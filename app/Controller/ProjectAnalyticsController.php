@@ -27,10 +27,7 @@ class ProjectAnalyticsController extends BaseController
       $values['from'] = $this->request->getStringParam('from', date('Y-m-d', strtotime('first day of last month')));
       $values['to'] = $this->request->getStringParam('to', date('Y-m-d'), strtotime('first day of this month'));
     }
-
-    print "From: " . $this->dateParser->removeTimeFromTimestamp($this->dateParser->getTimestamp($values['from']));
-    print "To: " .   $this->dateParser->removeTimeFromTimestamp($this->dateParser->getTimestamp($values['to']));
-
+    
     $groupinator = $this->groupinator
         ->setUrl("ProjectAnalyticsController","billable")
         ->setQuery($this->subtaskTimeTrackingModel->getBillableHoursQuery(
