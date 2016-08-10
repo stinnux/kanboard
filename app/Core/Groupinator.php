@@ -2,8 +2,16 @@
 
 namespace Kanboard\Core;
 
-
 use Picodb\Table;
+
+/**
+ * TODO: Min, Max, Avg, Count
+ * Print Output without paging
+ * CSS
+ * Unit-Tests
+ *
+ */
+
 
 /**
  * Grouping Helper.
@@ -15,6 +23,12 @@ use Picodb\Table;
  */
 class Groupinator extends Paginator
 {
+
+    const FIRST  = 1;
+    const LAST   = 2;
+    const MIDDLE = 4;
+    const ALWAYS = 8;
+
     /**
     * @var
     *
@@ -153,35 +167,59 @@ class Groupinator extends Paginator
           $this->groupquery->groupBy($this->_groupby);
 
           $current_offset = 0;
-          $result = $this->groupquery->findAll();
+          $result = array();
+          $groupresult = $this->groupquery->findAll();
 
-          for ($i=0; $i <= count($result); $i++) {
-            $groupvalue = $result[$i];
-            if (!empty($result[$i-1])) {
-              $prev_groupvalue = $result[$i-1];
+          for ($i=0; $i < count($groupresult); $i++) {
+            // array_push($result, $groupresult[$i]);
+            $groupvalue = $groupresult[$i];
+            if (!empty($groupresult[$i-1])) {
+              $prev_groupvalue = $groupresult[$i-1];
             } else {
               $prev_groupvalue = null;
             }
-            if (!empty($result[$i+1])) {
-              $next_groupvalue = $result[$i+1];
+            if (!empty($groupresult[$i+1])) {
+              $next_groupvalue = $groupresult[$i+1];
             } else {
               $next_groupvalue = null;
             }
             $this->sumUpGroupValues($groupvalue);
             $values = $this->getDetails($groupvalue);
             // Move through the groups until the offset is reached
-            if ($current_offset + $groupvalue['_count'] >= $this->offset) {
+            if ($current_offset + $groupvalue['_count'] < $this->offset) {
+                $current_offset += $groupvalue['_count'];
+            } else if ($current_offset + $groupvalue['_count'] >= $this->offset &&
+              $current_offset < $this->end)
+              {
+                if ($current_offset + $groupvalue['_count'] > $this->end) {
+                  $values = array_slice($values, 0, $this->end-$current_offset);
+                }
+                if ($current_offset < $this->offset) {
+                  $values = array_slice($values, $this->offset-$current_offset);
+                  $current_offset = $this->offset;
+                }
                 $this->addAllHeaders($result, $prev_groupvalue, $groupvalue, $next_groupvalue, $values[0]);
                 $this->addDetails($result, $prev_groupvalue, $groupvalue, $next_groupvalue, $values);
-                $this->addAllFooters($result, $prev_groupvalue, $groupvalue, $next_groupvalue, $values[0]);
+
+                if ($current_offset + count($values) < $this->end) {
+                    $this->addAllFooters($result, $prev_groupvalue, $groupvalue, $next_groupvalue, $values[0]);
+                }
+
                 $current_offset += $groupvalue['_count'];
             } else {
-                $current_offset += $groupvalue['_count'];
+                break;
             }
           }
       }
-
       return $result;
+  }
+
+  public function calculate()
+  {
+    parent::calculate();
+    $this->end = $this->offset + $this->limit;
+
+    return $this;
   }
 
   private function sumUpGroupValues($groupValue)
@@ -216,41 +254,50 @@ class Groupinator extends Paginator
 
 private function addAllHeaders(&$result, $prev_groupvalue, $groupvalue, $next_groupvalue, $values)
 {
+  $countrows=0;
       foreach ($this->_grouping as $groupColumn => $groupDetails) {
         $position = $this->getPosition($groupColumn, $prev_groupvalue, $groupvalue, $next_groupvalue);
-        if ($groupDetails['repeat']['header'] == 'allways' ||
-            $groupDetails['repeat']['header'] == 'first'  && $position == 'first' ||
-            $groupDetails['repeat']['header'] == 'last'   && $position == 'last' ||
-            $groupDetails['repeat']['header'] == 'middle' && $position == 'middle')
+        if ($groupDetails['repeat']['header'] == self::ALWAYS ||
+            $groupDetails['repeat']['header'] == self::FIRST  && $position & self::FIRST ||
+            $groupDetails['repeat']['header'] == self::LAST   && $position & self::LAST ||
+            $groupDetails['repeat']['header'] == self::MIDDLE && $position & self::MIDDLE)
             {
+              $countrows++;
               $groupValues=$this->getGroupValues($groupColumn,$groupvalue);
               $this->addHeader($result, $groupColumn, $groupValues, $values);
             }
       }
+      return $countrows;
 }
 
 private function getPosition($groupColumn, $prev_groupvalue, $groupvalue, $next_groupvalue)
 {
+
+    if ($prev_groupvalue == null && $next_groupvalue == null) {
+      return self::FIRST || self::LAST;
+    }
     if ($prev_groupvalue == null) {
-      return "first";
+      return self::FIRST;
     }
     if ($next_groupvalue == null) {
-      return "last";
+      return self::LAST;
     }
     $prev = $prev_groupvalue[$groupColumn];
     $curr = $groupvalue[$groupColumn];
     $next = $next_groupvalue[$groupColumn];
 
     if ($prev == $curr && $curr==$next) {
-      return "middle";
+      return self::MIDDLE;
+    }
+    if ($prev != $curr && $curr != $next) {
+      return self::FIRST || self::LAST;
     }
     if ($prev != $curr) {
-      return "first";
+      return self::FIRST;
     }
     if ($curr != $next) {
-      return "last";
+      return self::LAST;
     }
-
   }
 
   private function addHeader(&$result, $groupColumn, $groupvalue, $values)
@@ -264,17 +311,20 @@ private function getPosition($groupColumn, $prev_groupvalue, $groupvalue, $next_
 
     private function addAllFooters(&$result, $prev_groupvalue, $groupvalue, $next_groupvalue, $values)
     {
+      $countrows = 0;
         foreach ($this->_grouping as $groupColumn => $groupDetails) {
           $position = $this->getPosition($groupColumn, $prev_groupvalue, $groupvalue, $next_groupvalue);
-            if ($groupDetails['repeat']['footer'] == 'allways' ||
-                $groupDetails['repeat']['footer'] == 'first'  && $position == 'first' ||
-                $groupDetails['repeat']['footer'] == 'last '  && $position == 'last'  ||
-                $groupDetails['repeat']['footer'] == 'middle' && $position == 'middle')
+            if ($groupDetails['repeat']['footer'] == self::ALWAYS ||
+                $groupDetails['repeat']['footer'] == self::FIRST  && $position == self::FIRST ||
+                $groupDetails['repeat']['footer'] == self::LAST   && $position == self::LAST  ||
+                $groupDetails['repeat']['footer'] == self::MIDDLE && $position == self::MIDDLE)
                 {
-                $groupValues=$this->getGroupValues($groupColumn,$groupvalue);
-                $this->addFooter($result, $groupColumn, $groupValues, $values);
+                  $countrows++;
+                  $groupValues=$this->getGroupValues($groupColumn,$groupvalue);
+                  $this->addFooter($result, $groupColumn, $groupValues, $values);
               }
         }
+        return $countrows;
     }
 
     private function addFooter(&$result, $groupColumn, $groupValues, $values)
@@ -311,14 +361,14 @@ private function getPosition($groupColumn, $prev_groupvalue, $groupvalue, $next_
       return $groupValues;
     }
 
-    private function addDetails(&$result, $groupValues, $values)
+    private function addDetails(&$result, $prev_groupvalue, $groupvalue, $next_groupvalue, $values)
     {
         array_push($result, array(
-      'groupType' => 'details',
-      'groupName' => '__details__',
-      'groupValues' => $groupValues,
-      'values' => $values,
-    ));
+            'groupType' => 'details',
+            'groupName' => '__details__',
+            'groupValues' => $groupvalue,
+            'values' => $values,
+          ));
     }
 
     private function addGroupBy(string $column)
