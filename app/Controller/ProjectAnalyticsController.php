@@ -5,6 +5,7 @@ use Kanboard\Controller\BaseController;
 use Kanboard\Model\SubtaskModel;
 use Kanboard\Model\SubtaskTimeTrackingModel;
 use Kanboard\Model\TaskModel;
+use Kanboard\Core\Groupinator;
 
 /**
 * Project Analytics Controller
@@ -25,18 +26,18 @@ class ProjectAnalyticsController extends BaseController
 
     if (empty($values)) {
       $values['from'] = $this->request->getStringParam('from', date('Y-m-d', strtotime('first day of last month')));
-      $values['to'] = $this->request->getStringParam('to', date('Y-m-d'), strtotime('first day of this month'));
+      $values['to'] = $this->request->getStringParam('to', date('Y-m-d', strtotime('last day of last month')));
     }
-    
+
     $groupinator = $this->groupinator
         ->setUrl("ProjectAnalyticsController","billable")
         ->setQuery($this->subtaskTimeTrackingModel->getBillableHoursQuery(
           $this->dateParser->removeTimeFromTimestamp($this->dateParser->getTimestamp($values['from'])),
           $this->dateParser->removeTimeFromTimestamp($this->dateParser->getTimestamp($values['to']))))
         ->addAggregate(SubtaskTimeTrackingModel::TABLE.'.time_spent','sum')
-        ->addGroup(SubtaskTimeTrackingModel::TABLE.'.subtask_id', 'Subtask', array('header' => 'none', 'footer' => 'allways'))
-        ->addGroup(SubtaskModel::TABLE.'.task_id', 'Task', array('header' => 'none', 'footer' => 'last'))
-        ->addGroup(TaskModel::TABLE.'.project_id', 'Project', array('header' => 'first', 'footer' => 'last'))
+        ->addGroup(SubtaskTimeTrackingModel::TABLE.'.subtask_id', 'Subtask', array('header' => 'none', 'footer' => Groupinator::ALWAYS))
+        ->addGroup(SubtaskModel::TABLE.'.task_id', 'Task', array('header' => 'none', 'footer' => Groupinator::LAST))
+        ->addGroup(TaskModel::TABLE.'.project_id', 'Project', array('header' => 'first', 'footer' => Groupinator::LAST))
         ->setDetails("project_analytics/details")
         ->setMax(20)
         ->calculate();
