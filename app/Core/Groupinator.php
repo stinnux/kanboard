@@ -23,12 +23,27 @@ use Picodb\Table;
  */
 class Groupinator extends Paginator
 {
-
+/**
+ * constants for header and footer positions
+ *
+ * @var $NEVER never show
+ * @var $FIRST show on first occurence of this value
+ * @var $LAST show on last occurence of this value
+ * @var $MIDDLE do not show on first and last occurence, but in the middle
+ * @var $ALWAYS show always
+ */
+    const NEVER  = 0;
     const FIRST  = 1;
     const LAST   = 2;
     const MIDDLE = 4;
     const ALWAYS = 8;
 
+
+    const AVG   = 1;
+    const SUM   = 2;
+    const MIN   = 4;
+    const MAX   = 8;
+    const COUNT = 16;
     /**
     * @var
     *
@@ -188,6 +203,7 @@ class Groupinator extends Paginator
             // Move through the groups until the offset is reached
             if ($current_offset + $groupvalue['_count'] < $this->offset) {
                 $current_offset += $groupvalue['_count'];
+                $current_offset += $this->calculateHeaderAndFooterCount($prev_groupvalue, $groupvalue, $next_groupvalue);
             } else if ($current_offset + $groupvalue['_count'] >= $this->offset &&
               $current_offset < $this->end)
               {
@@ -198,11 +214,11 @@ class Groupinator extends Paginator
                   $values = array_slice($values, $this->offset-$current_offset);
                   $current_offset = $this->offset;
                 }
-                $this->addAllHeaders($result, $prev_groupvalue, $groupvalue, $next_groupvalue, $values[0]);
+                $current_offset += $this->addAllHeaders($result, $prev_groupvalue, $groupvalue, $next_groupvalue, $values[0]);
                 $this->addDetails($result, $prev_groupvalue, $groupvalue, $next_groupvalue, $values);
 
                 if ($current_offset + count($values) < $this->end) {
-                    $this->addAllFooters($result, $prev_groupvalue, $groupvalue, $next_groupvalue, $values[0]);
+                    $current_offset += $this->addAllFooters($result, $prev_groupvalue, $groupvalue, $next_groupvalue, $values[0]);
                 }
 
                 $current_offset += $groupvalue['_count'];
@@ -227,16 +243,28 @@ class Groupinator extends Paginator
     // TODO: Sum up all values in a nice array
     foreach ($this->_grouping as $groupColumn => $groupName) {
         foreach ($this->_aggregate as $column => $func) {
-            switch ($func) {
-              case 'sum':
-                $column = 'sum('.$column.')';
-            }
+          $column=$this->sqlColumnName($column, $func);
             if (empty($this->_sum[$groupColumn][$groupValue[$groupColumn]][$column])) {
                 $this->_sum[$groupColumn][$groupValue[$groupColumn]][$column] = $groupValue[$column];
             } else {
                 switch ($func) {
-                  case 'sum':
+                  case self::SUM:
+                  case self::COUNT:
                     $this->_sum[$groupColumn][$groupValue[$groupColumn]][$column] += $groupValue[$column];
+                  case self::MIN:
+                    $this->_sum[$groupColumn][$groupValue[$groupColumn]][$column] =
+                      min($this->_sum[$groupColumn][$groupValue[$groupColumn]][$column],
+                      $groupValue[$column]);
+                  case self::MAX:
+                    $this->_sum[$groupColumn][$groupValue[$groupColumn]][$column] =
+                      max($this->_sum[$groupColumn][$groupValue[$groupColumn]][$column],
+                      $groupValue[$column]);
+                  case self::AVG:
+                    // @TODO: Check if this is correct, don't think so
+                    // @TODO: Hint: multiply with count and divide by total count
+                    $this->_sum[$groupColumn][$groupValue[$groupColumn]][$column] =
+                      ($this->_sum[$groupColumn][$groupValue[$groupColumn]][$column] +
+                        $groupValue[$column]) / 2;
                 }
             }
         }
@@ -244,12 +272,70 @@ class Groupinator extends Paginator
   }
 
 /**
+ * build the sql column name from function and columnname
+ *
+ * @var $func function
+ */
+private function sqlColumnName($column, $func) {
+  switch ($func) {
+    case self::SUM:
+      $column='sum('.$column.')';
+      break;
+    case self::AVG:
+      $column='avg('.$column.')';
+      break;
+    case self::MIN:
+      $column='min('.$column.')';
+      break;
+    case self::MAX:
+      $column='max('.$column.')';
+      break;
+    case self::COUNT:
+      $column='count('.$column.')';
+      break;
+    }
+    return $column;
+}
+
+/**
+ * calculate the count of headers and footers that would be printed
+ * @param $result the result array
+ * @param $prev_groupvalue the groupvalue of the previous row
+ * @param $groupvalue the current group values
+ * @param $next_groupvalue the groupvalue of the next row
+*/
+private function calculateHeaderAndFooterCount($prev_groupvalue, $groupvalue, $next_groupvalue)
+  {
+    $countrows=0;
+    foreach ($this->_grouping as $groupColumn => $groupDetails) {
+      $position = $this->getPosition($groupColumn, $prev_groupvalue, $groupvalue, $next_groupvalue);
+      if ($groupDetails['repeat']['header'] == self::ALWAYS ||
+          $groupDetails['repeat']['header'] == self::FIRST  && $position & self::FIRST ||
+          $groupDetails['repeat']['header'] == self::LAST   && $position & self::LAST ||
+          $groupDetails['repeat']['header'] == self::MIDDLE && $position & self::MIDDLE)
+          {
+            $countrows++;
+          }
+
+        if ($groupDetails['repeat']['footer'] == self::ALWAYS ||
+            $groupDetails['repeat']['footer'] == self::FIRST  && $position & self::FIRST ||
+            $groupDetails['repeat']['footer'] == self::LAST   && $position & self::LAST ||
+            $groupDetails['repeat']['footer'] == self::MIDDLE && $position & self::MIDDLE)
+            {
+              $countrows++;
+            }
+          }
+        return $countrows;
+  }
+
+/**
  * add All Headers to the result array
  *
- * var $result the result array
- * var $groupvalue the current group values
- * var $values the current values
- * var $position the position (first/last/middle) of the header
+ * @param $result the result array
+ * @param $prev_groupvalue the groupvalue of the previous row
+ * @param $groupvalue the current group values
+ * @param $next_groupvalue the groupvalue of the next row
+ * @param $values the current values
  */
 
 private function addAllHeaders(&$result, $prev_groupvalue, $groupvalue, $next_groupvalue, $values)
@@ -352,10 +438,7 @@ private function getPosition($groupColumn, $prev_groupvalue, $groupvalue, $next_
     {
       $groupValues = array();
       foreach ($this->_aggregate as $column => $func) {
-        switch ($func) {
-          case 'sum':
-            $column='sum('.$column.')';
-          }
+          $column = $this->sqlColumnName($column, $func);
           $groupValues[$column] = $this->_sum[$groupcolumn][$groupvalue[$groupcolumn]][$column];
         }
       return $groupValues;
@@ -395,8 +478,8 @@ private function getPosition($groupColumn, $prev_groupvalue, $groupvalue, $next_
      */
     private function addSelects(array $columns)
     {
-        foreach ($columns as $col => $func) {
-            $this->addSelect($func.'('.$col.')');
+        foreach ($columns as $column => $func) {
+          $this->addSelect($this->sqlColumnName($column, $func));
         }
     }
 
@@ -416,51 +499,4 @@ private function getPosition($groupColumn, $prev_groupvalue, $groupvalue, $next_
      $this->_groupValues[$field] = array();
  }
 
- /**
-  * call all registered Headers.
-  */
- private function callHeaders($values)
- {
-     foreach ($this->_grouping as $groupColumn) {
-         callGroupHeader($groupColumn, $values);
-     }
- }
-
-  /**
-   * Call group Header for a specified groupColumn.
-   */
-  private function callGroupHeader($groupColumn, $values)
-  {
-      if (!isset($this->groupValues[$groupColumn]) ||
-        !isset($this->groupValues[$groupColumn]['lastValue']) ||
-        $this->groupValues[$groupColumn]['lastValue'] != $values[$groupColumn]) {
-          if (!empty($this->_grouping[$groupColumn]['headerTemplate'])) {
-              $this->render($this->_grouping[$groupColumn]['headerTemplate'],
-          array('values' => $values,
-                'lastValue' => $this->_groupValues[$groupColumn]['lastValue'],
-                'funcColumns' => $this->_groupValues[$groupColumn]['funcColumns'],
-              )
-            );
-          }
-      }
-  }
-
-   /**
-    * Call group footer for a specified groupColumn.
-    */
-   private function callGroupFooter($groupColumn, $values)
-   {
-       if (!isset($this->groupValues[$groupColumn]) ||
-         !isset($this->groupValues[$groupColumn]['lastValue']) ||
-         $this->groupValues[$groupColumn]['lastValue'] != $values[$groupColumn]) {
-           if (!empty($this->_grouping[$groupColumn]['footerTemplate'])) {
-               $this->render($this->_grouping[$groupColumn]['footerTemplate'],
-           array('values' => $values,
-                 'lastValue' => $this->_groupValues[$groupColumn]['lastValue'],
-                 'funcColumns' => $this->_groupValues[$groupColumn]['funcColumns'],
-               )
-             );
-           }
-       }
-   }
 }

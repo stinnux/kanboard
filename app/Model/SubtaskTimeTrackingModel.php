@@ -87,6 +87,7 @@ class SubtaskTimeTrackingModel extends Base
                         self::TABLE.'.start',
                         self::TABLE.'.time_spent',
                         self::TABLE.'.user_id',
+                        self::TABLE.'.is_billable',
                         SubtaskModel::TABLE.'.task_id',
                         SubtaskModel::TABLE.'.title AS subtask_title',
                         TaskModel::TABLE.'.project_id',
