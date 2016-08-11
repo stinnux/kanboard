@@ -34,10 +34,10 @@ class ProjectAnalyticsController extends BaseController
         ->setQuery($this->subtaskTimeTrackingModel->getBillableHoursQuery(
           $this->dateParser->removeTimeFromTimestamp($this->dateParser->getTimestamp($values['from'])),
           $this->dateParser->removeTimeFromTimestamp($this->dateParser->getTimestamp($values['to']))))
-        ->addAggregate(SubtaskTimeTrackingModel::TABLE.'.time_spent','sum')
-        ->addGroup(SubtaskTimeTrackingModel::TABLE.'.subtask_id', 'Subtask', array('header' => 'none', 'footer' => Groupinator::ALWAYS))
-        ->addGroup(SubtaskModel::TABLE.'.task_id', 'Task', array('header' => 'none', 'footer' => Groupinator::LAST))
-        ->addGroup(TaskModel::TABLE.'.project_id', 'Project', array('header' => 'first', 'footer' => Groupinator::LAST))
+        ->addAggregate(SubtaskTimeTrackingModel::TABLE.'.time_spent', Groupinator::SUM)
+        ->addGroup(SubtaskTimeTrackingModel::TABLE.'.subtask_id', 'Subtask', array('header' => Groupinator::NEVER, 'footer' => Groupinator::ALWAYS))
+        ->addGroup(SubtaskModel::TABLE.'.task_id', 'Task', array('header' => Groupinator::NEVER, 'footer' => Groupinator::LAST))
+        ->addGroup(TaskModel::TABLE.'.project_id', 'Project', array('header' => Groupinator::FIRST, 'footer' => Groupinator::LAST))
         ->setDetails("project_analytics/details")
         ->setMax(20)
         ->calculate();
