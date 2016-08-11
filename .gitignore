@@ -22,3 +22,7 @@ data/cache
 !docker/kanboard/config.php
 node_modules
 bower_components
+
+data/debug
+
+data/debug.sql
