@@ -10,6 +10,7 @@ use Kanboard\Api\Authorization\SubtaskAuthorization;
  * @package  Kanboard\Api\Procedure
  * @author   Frederic Guillot
  * @author   Nikolaos Georgakis
+ * @author   Thomas Stinner
  */
 class SubtaskTimeTrackingProcedure extends BaseProcedure
 {
@@ -36,4 +37,11 @@ class SubtaskTimeTrackingProcedure extends BaseProcedure
         SubtaskAuthorization::getInstance($this->container)->check($this->getClassName(), 'getSubtaskTimeSpent', $subtask_id);
         return $this->subtaskTimeTrackingModel->getTimeSpent($subtask_id, $user_id);
     }
+
+    public function getTimeSpentVsTimeBillable()
+    {
+      $from=1467331200;
+      $to=1469923200;
+      return $this->subtaskTimeTrackingModel->getTimeSpentVsTimeBillableQuery($from, $to)->findAll();
+    }   
 }

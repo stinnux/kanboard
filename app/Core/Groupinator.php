@@ -227,6 +227,7 @@ class Groupinator extends Paginator
             }
           }
       }
+      var_dump($this->_sum);
       return $result;
   }
 
@@ -240,33 +241,34 @@ class Groupinator extends Paginator
 
   private function sumUpGroupValues($groupValue)
   {
-    // TODO: Sum up all values in a nice array
+    $next = &$this->_sum;
     foreach ($this->_grouping as $groupColumn => $groupName) {
-        foreach ($this->_aggregate as $column => $func) {
-          $column=$this->sqlColumnName($column, $func);
-            if (empty($this->_sum[$groupColumn][$groupValue[$groupColumn]][$column])) {
-                $this->_sum[$groupColumn][$groupValue[$groupColumn]][$column] = $groupValue[$column];
+      $next[$groupColumn][$groupValue[$groupColumn]] = array();
+      $next = &$next[$groupColumn][$groupValue[$groupColumn]];
+    }
+
+    print "<pre>";
+    var_dump($this->_sum);
+    print "</pre>";
+
+    foreach ($this->_aggregate as $column => $func) {
+      $column=$this->sqlColumnName($column, $func);
+            if (empty($next[$column])) {
+                $next[$column] = $groupValue[$column];
             } else {
                 switch ($func) {
                   case self::SUM:
                   case self::COUNT:
-                    $this->_sum[$groupColumn][$groupValue[$groupColumn]][$column] += $groupValue[$column];
+                    $next[$column] += $groupValue[$column];
                   case self::MIN:
-                    $this->_sum[$groupColumn][$groupValue[$groupColumn]][$column] =
-                      min($this->_sum[$groupColumn][$groupValue[$groupColumn]][$column],
-                      $groupValue[$column]);
+                    $next[$column] = min($next[$column], $groupValue[$column]);
                   case self::MAX:
-                    $this->_sum[$groupColumn][$groupValue[$groupColumn]][$column] =
-                      max($this->_sum[$groupColumn][$groupValue[$groupColumn]][$column],
-                      $groupValue[$column]);
+                    $next[$column] = max($next[$column], $groupValue[$column]);
                   case self::AVG:
                     // @TODO: Check if this is correct, don't think so
                     // @TODO: Hint: multiply with count and divide by total count
-                    $this->_sum[$groupColumn][$groupValue[$groupColumn]][$column] =
-                      ($this->_sum[$groupColumn][$groupValue[$groupColumn]][$column] +
-                        $groupValue[$column]) / 2;
+                    $next[$column] = ($next[$column] + $groupValue[$column]) / 2;
                 }
-            }
         }
     }
   }

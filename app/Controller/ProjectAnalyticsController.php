@@ -68,9 +68,8 @@ class ProjectAnalyticsController extends BaseController
         ->setQuery($this->subtaskTimeTrackingModel->getTimeSpentVsTimeBillableQuery(
             $this->dateParser->removeTimeFromTimestamp($this->dateParser->getTimestamp($values['from'])),
             $this->dateParser->removeTimeFromTimestamp($this->dateParser->getTimestamp($values['to']))))
-        ->addAggregate('case when '.SubtaskTimeTrackingModel::TABLE.'.is_billable = 1 then '.SubtaskTimeTrackingModel::TABLE.'.time_spent else 0', Groupinator::SUM)
-        ->addAggregate('case when '.SubtaskTimeTrackingModel::TABLE.'.is_billable = 0 then '.SubtaskTimeTrackingModel::TABLE.'.time_spent else 0', Groupinator::SUM)
-        ->addGroup(SubtaskTimeTrackingModel::TABLE.'.is_billable', 'Billable', array('header' => Groupinator::ALWAYS, 'footer' => Groupinator::ALWAYS))
+        ->addAggregate(SubtaskTimeTrackingModel::TABLE.'.time_spent', Groupinator::SUM)
+        ->addGroup(SubtaskTimeTrackingModel::TABLE.'.is_billable', 'Billable', array('header' => Groupinator::NEVER, 'footer' => Groupinator::NEVER))
         ->addGroup(SubtaskTimeTrackingModel::TABLE.'.subtask_id', 'Subtask', array('header' => Groupinator::NEVER, 'footer' => Groupinator::ALWAYS))
         ->addGroup(SubtaskModel::TABLE.'.task_id', 'Task', array('header' => Groupinator::NEVER, 'footer' => Groupinator::LAST))
         ->addGroup(TaskModel::TABLE.'.project_id', 'Project', array('header' => Groupinator::FIRST, 'footer' => Groupinator::LAST))

@@ -400,6 +400,7 @@ class SubtaskTimeTrackingModel extends Base
                  ->asc(TaskModel::TABLE.'.project_id')
                  ->asc(SubtaskModel::TABLE.'.task_id')
                  ->asc(self::TABLE.'.subtask_id')
+                 ->asc(self::TABLE.'.is_billable')
                  ->asc(self::TABLE.'.start');
       }
 
