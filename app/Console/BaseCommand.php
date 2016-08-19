@@ -10,9 +10,11 @@ use Symfony\Component\Console\Command\Command;
  *
  * @package  console
  * @author   Frederic Guillot
+ * @author   Thomas Stinner
  *
  * @property \Kanboard\Validator\PasswordResetValidator         $passwordResetValidator
  * @property \Kanboard\Export\SubtaskExport                     $subtaskExport
+ * @property \Kanboard\Export\SubtaskTimeTrackingExport         $subtaskTimeTrackingExport
  * @property \Kanboard\Export\TaskExport                        $taskExport
  * @property \Kanboard\Export\TransitionExport                  $transitionExport
  * @property \Kanboard\Model\NotificationModel                  $notificationModel

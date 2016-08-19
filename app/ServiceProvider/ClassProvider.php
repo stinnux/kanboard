@@ -119,6 +119,7 @@ class ClassProvider implements ServiceProviderInterface
         ),
         'Export' => array(
             'SubtaskExport',
+            'SubtaskTimeTrackingExport',
             'TaskExport',
             'TransitionExport',
         ),
